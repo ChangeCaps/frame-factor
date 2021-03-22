@@ -7,3 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.39"
+bevy = { git = "https://github.com/bevyengine/bevy", branch = "main" }
+clap = "3.0.0-beta.2"
