@@ -1,10 +1,14 @@
+use crate::networking::*;
 use bevy::prelude::*;
 
 /// Runs the client.
 pub fn run(ip: String) {
     App::build()
+        // plugins
+        .add_plugin(NetworkPlugin::client(ip))
         .add_plugins(DefaultPlugins)
         // systems
+        // startup_systems
         .add_startup_system(setup_system.system())
         .run();
 }

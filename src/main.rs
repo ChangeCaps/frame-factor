@@ -1,4 +1,8 @@
+//! The Frame Factor code base.
+
 mod client;
+mod game_state;
+mod helper;
 mod networking;
 mod server;
 
