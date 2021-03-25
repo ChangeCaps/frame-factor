@@ -2,7 +2,6 @@
 
 use super::*;
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     net::{TcpListener, TcpStream},
@@ -25,6 +24,11 @@ pub struct ServerGreeting {
     server_id: ActorId,
 }
 
+pub enum ConnectionEvent {
+    Connected { id: ActorId },
+    Disconnected { id: ActorId, error: anyhow::Error },
+}
+
 /// The connections stored in the [`NetworkResource`].
 pub struct Connection {
     stream: TcpStream,
@@ -42,18 +46,30 @@ impl Connection {
     }
 
     /// Receives a [`Vec`] of [`NetworkPayload`]s.
-    pub fn recv(&mut self) -> anyhow::Result<Vec<NetworkPayload>> {
-        let payloads = bincode::deserialize_from(&mut self.stream);
+    pub fn recv(&self) -> anyhow::Result<Vec<NetworkPayload>> {
+        let mut payloads = Vec::new();
 
-        match payloads {
-            Ok(payloads) => Ok(payloads),
-            Err(e) => match *e {
-                bincode::ErrorKind::Io(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                    Ok(Vec::new())
+        loop {
+            let payload = bincode::deserialize_from(&self.stream);
+
+            match payload {
+                Ok(payload) => {
+                    payloads.push(payload);
                 }
-                e => Err(e.into()),
-            },
+                Err(e) => match *e {
+                    bincode::ErrorKind::Io(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        break Ok(payloads);
+                    }
+                    e => break Err(e.into()),
+                },
+            }
         }
+    }
+
+    pub fn send(&self, payload: &NetworkPayload) -> anyhow::Result<()> {
+        bincode::serialize_into(&self.stream, payload)?;
+
+        Ok(())
     }
 }
 
@@ -75,14 +91,18 @@ impl ServerResource {
     /// Listens for connections and adds any connected clients to the [`NetworkResource`].
     ///
     /// **Note** this will never block.
-    pub fn listen(&self, net: &mut NetworkResource) -> anyhow::Result<()> {
+    pub fn listen(&self, net: &mut NetworkResource) -> anyhow::Result<Vec<ConnectionEvent>> {
+        let mut events = Vec::new();
+
         for stream in self.listener.incoming() {
             match stream {
                 Ok(stream) => {
-                    net.add_client(stream)?;
+                    let id = net.add_client(stream)?;
+
+                    events.push(ConnectionEvent::Connected { id });
                 }
                 Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                    return Ok(());
+                    return Ok(events);
                 }
                 e => {
                     e?;
@@ -90,7 +110,7 @@ impl ServerResource {
             }
         }
 
-        Ok(())
+        Ok(events)
     }
 }
 
@@ -98,8 +118,11 @@ impl ServerResource {
 pub fn network_server_system(
     server_resource: Res<ServerResource>,
     mut net: ResMut<NetworkResource>,
+    mut events: EventWriter<ConnectionEvent>,
 ) {
-    server_resource.listen(&mut *net).unwrap();
+    let connection_events = server_resource.listen(&mut *net).unwrap();
+
+    events.send_batch(connection_events.into_iter());
 }
 
 /// Contains all the data for networking.
@@ -161,18 +184,34 @@ impl NetworkResource {
         self.connections.insert(actor_id, connection);
     }
 
-    pub fn recv(&mut self) -> anyhow::Result<Vec<NetworkMessage>> {
+    pub fn recv(&self) -> (Vec<NetworkMessage>, Vec<ConnectionEvent>) {
         let mut messages = Vec::new();
+        let mut connection_events = Vec::new();
 
-        for (id, connection) in &mut self.connections {
-            for payload in connection.recv()? {
-                messages.push(NetworkMessage {
-                    sender: *id,
-                    payload,
-                });
+        for (id, connection) in &self.connections {
+            match connection.recv() {
+                Ok(m) => {
+                    for payload in m {
+                        messages.push(NetworkMessage {
+                            sender: *id,
+                            payload,
+                        });
+                    }
+                }
+                Err(e) => {
+                    connection_events.push(ConnectionEvent::Disconnected { id: *id, error: e });
+                }
             }
         }
 
-        Ok(messages)
+        (messages, connection_events)
+    }
+
+    pub fn send(&self, payload: &NetworkPayload) -> anyhow::Result<()> {
+        for (_id, connection) in &self.connections {
+            connection.send(&payload)?;
+        }
+
+        Ok(())
     }
 }

@@ -4,7 +4,9 @@ mod client;
 mod game_state;
 mod helper;
 mod networking;
+mod player;
 mod server;
+mod world_transform;
 
 use clap::Clap;
 
