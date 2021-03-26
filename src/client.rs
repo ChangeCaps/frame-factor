@@ -1,3 +1,4 @@
+use crate::input::*;
 use crate::networking::*;
 use crate::player::*;
 use crate::world_transform::*;
@@ -7,12 +8,13 @@ use bevy::prelude::*;
 pub fn run(ip: String) {
     App::build()
         // plugins
-        .add_plugin(NetworkPlugin::client(ip))
         .add_plugins(DefaultPlugins)
+        .add_plugin(NetworkPlugin::client(ip))
+        .add_plugin(PlayerPlugin)
+        .add_plugin(InputPlugin)
         // network events
         .register_network_event::<WorldTransformEvent>()
         // network spawnables
-        .register_network_spawnable::<PlayerSpawner>()
         // systems
         .add_system(world_transform_system.system())
         .add_system(world_transform_network_system.system())

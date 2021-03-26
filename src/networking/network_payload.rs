@@ -67,7 +67,7 @@ pub fn network_receive_system(
     messages.clear();
 
     let (m, c) = net.recv();
-    
+
     for message in m {
         messages.add(message);
     }

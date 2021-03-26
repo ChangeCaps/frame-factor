@@ -4,6 +4,7 @@ use super::*;
 use bevy::prelude::*;
 use std::{
     collections::HashMap,
+    io::prelude::*,
     net::{TcpListener, TcpStream},
 };
 
@@ -13,7 +14,7 @@ use std::{
 ///
 /// [`ActorId`]s should always be syncronized, so any actor can be
 /// unequely identified and referred to.
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ActorId(pub u32);
 
 /// When a client connects to the server, the server sends this greeting
@@ -45,14 +46,22 @@ impl Connection {
         Ok(Self { stream })
     }
 
+    pub fn recv_single(&self) -> bincode::Result<NetworkPayload> {
+        let mut length = [0u8; 4];
+        self.stream.peek(&mut length)?;
+        let length = u32::from_be_bytes(length) as usize;
+        let mut buf = vec![0u8; length + 4];
+        (&self.stream).read(&mut buf)?;
+
+        bincode::deserialize(&buf[4..])
+    }
+
     /// Receives a [`Vec`] of [`NetworkPayload`]s.
     pub fn recv(&self) -> anyhow::Result<Vec<NetworkPayload>> {
         let mut payloads = Vec::new();
 
         loop {
-            let payload = bincode::deserialize_from(&self.stream);
-
-            match payload {
+            match self.recv_single() {
                 Ok(payload) => {
                     payloads.push(payload);
                 }
@@ -67,7 +76,11 @@ impl Connection {
     }
 
     pub fn send(&self, payload: &NetworkPayload) -> anyhow::Result<()> {
-        bincode::serialize_into(&self.stream, payload)?;
+        let data = bincode::serialize(payload)?;
+        let length = data.len();
+
+        (&self.stream).write(&(length as u32).to_be_bytes())?;
+        (&self.stream).write(&data)?;
 
         Ok(())
     }
