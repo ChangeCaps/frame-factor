@@ -2,6 +2,7 @@
 
 mod client;
 mod frame;
+mod game_settings;
 mod game_state;
 mod helper;
 mod input;
@@ -9,7 +10,6 @@ mod networking;
 mod player;
 mod server;
 mod world_transform;
-mod game_settings;
 
 use clap::Clap;
 

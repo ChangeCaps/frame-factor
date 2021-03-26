@@ -134,7 +134,15 @@ pub fn network_spawner_system(world: &mut World) {
             for payload in network_spawner.take_spawns(world) {
                 let net = world.get_resource::<NetworkResource>().unwrap();
 
-                net.send(&payload).unwrap();
+                let connection_events = net.send(&payload);
+
+                let mut events = world
+                    .get_resource_mut::<bevy::app::Events<ConnectionEvent>>()
+                    .unwrap();
+
+                for event in connection_events {
+                    events.send(event);
+                }
 
                 network_spawner.spawn_payload(world, &payload);
             }

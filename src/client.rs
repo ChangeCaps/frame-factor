@@ -1,17 +1,26 @@
+use crate::frame::*;
 use crate::input::*;
 use crate::networking::*;
 use crate::player::*;
 use crate::world_transform::*;
 use bevy::prelude::*;
 
+#[derive(Serialize, Deserialize, TypeUuid)]
+#[uuid = "9968f81b-59da-4292-8015-d6d4bbccb5c7"]
+pub struct ClientGreeting {}
+
 /// Runs the client.
 pub fn run(ip: String) {
+    let greeting = ClientGreeting {};
+    let payload = NetworkPayload::new(&greeting, ClientGreeting::TYPE_UUID);
+
     App::build()
         // plugins
         .add_plugins(DefaultPlugins)
-        .add_plugin(NetworkPlugin::client(ip))
+        .add_plugin(NetworkPlugin::client(ip, payload))
         .add_plugin(PlayerPlugin)
         .add_plugin(InputPlugin)
+        .add_plugin(FramePlugin)
         // network events
         .register_network_event::<WorldTransformEvent>()
         // network spawnables
@@ -25,6 +34,7 @@ pub fn run(ip: String) {
 
 /// Setup system for the client.
 fn setup_system(mut commands: Commands, asset_server: Res<AssetServer>) {
+    asset_server.watch_for_changes().unwrap();
     let handles = asset_server.load_folder(".").unwrap();
 
     commands

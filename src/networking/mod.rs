@@ -21,21 +21,21 @@ pub struct NetworkSettings {
 }
 
 pub struct NetworkPlugin {
-    is_server: bool,
+    client_payload: Option<NetworkPayload>,
     server_ip: String,
 }
 
 impl NetworkPlugin {
-    pub fn client(ip: String) -> Self {
+    pub fn client(ip: String, greeting: NetworkPayload) -> Self {
         Self {
-            is_server: false,
+            client_payload: Some(greeting),
             server_ip: ip,
         }
     }
 
     pub fn server(ip: String) -> Self {
         Self {
-            is_server: true,
+            client_payload: None,
             server_ip: ip,
         }
     }
@@ -50,7 +50,7 @@ impl Plugin for NetworkPlugin {
         app_builder.insert_resource(NetworkSpawner::new());
         app_builder.insert_resource(NetworkEntityRegistry::new());
         app_builder.insert_resource(NetworkSettings {
-            is_server: self.is_server,
+            is_server: self.client_payload.is_none(),
         });
 
         app_builder.add_system_to_stage(
@@ -68,7 +68,11 @@ impl Plugin for NetworkPlugin {
             network_spawner_system.exclusive_system(),
         );
 
-        if self.is_server {
+        if let Some(greeting) = &self.client_payload {
+            let stream = TcpStream::connect(&self.server_ip).unwrap();
+
+            app_builder.insert_resource(NetworkResource::client(stream, greeting).unwrap());
+        } else {
             app_builder.insert_resource(ServerResource::new(&self.server_ip).unwrap());
             app_builder.insert_resource(NetworkResource::empty());
 
@@ -76,10 +80,6 @@ impl Plugin for NetworkPlugin {
                 bevy::app::CoreStage::PreUpdate,
                 network_server_system.system(),
             );
-        } else {
-            let stream = TcpStream::connect(&self.server_ip).unwrap();
-
-            app_builder.insert_resource(NetworkResource::client(stream).unwrap());
         }
     }
 }

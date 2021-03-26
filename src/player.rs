@@ -1,3 +1,4 @@
+use crate::frame::*;
 use crate::input::*;
 use crate::networking::*;
 use crate::world_transform::*;
@@ -11,6 +12,7 @@ pub enum PlayerInputEvent {
 }
 
 pub struct Player {
+    frame: Handle<Frame>,
     movement_vector: Vec2,
     actor_id: ActorId,
 }
@@ -22,6 +24,7 @@ pub struct PlayerResource {
 pub fn player_system(
     time: Res<Time>,
     network_entity_registry: Res<NetworkEntityRegistry>,
+    frames: Res<Assets<Frame>>,
     mut events: ResMut<NetworkEvents<PlayerInputEvent>>,
     mut query: Query<(&mut Player, &mut WorldTransform)>,
 ) {
@@ -45,11 +48,12 @@ pub fn player_system(
     }
 
     for (player, mut world_transform) in query.iter_mut() {
-        // TODO: get movement speed from the players frame
-        let movement_speed = 32.0;
+        if player.movement_vector.length() > 0.0 {
+            let frame = frames.get(&player.frame).unwrap();
 
-        world_transform.translation +=
-            player.movement_vector.extend(0.0) * movement_speed * time.delta_seconds();
+            world_transform.translation +=
+                player.movement_vector.extend(0.0) * frame.walking_speed * time.delta_seconds();
+        }
     }
 }
 
@@ -101,19 +105,22 @@ pub fn player_input_system(
     }
 }
 
-#[derive(TypeUuid, Clone, Copy, Serialize, Deserialize)]
+#[derive(TypeUuid, Clone, Serialize, Deserialize)]
 #[uuid = "053c55fe-dcd8-4746-829f-51760445739e"]
 pub struct PlayerSpawner {
+    pub frame: String,
     pub player_id: ActorId,
 }
 
 impl NetworkSpawnable for PlayerSpawner {
     fn spawn(&self, world: &mut World) -> Entity {
-        let world_transform = WorldTransform {
-            translation: Vec3::new(0.0, 0.0, 0.0),
-        };
+        let world_transform = WorldTransform::new(Vec3::new(0.0, 0.0, 0.0));
 
         let player = Player {
+            frame: world
+                .get_resource::<Assets<Frame>>()
+                .unwrap()
+                .get_handle(self.frame.as_str()),
             movement_vector: Vec2::ZERO,
             actor_id: self.player_id,
         };

@@ -28,9 +28,15 @@ pub fn network_event_system<T: NetworkEvent>(
     }
 }
 
-pub fn network_event_sender_system(sender: Res<NetworkEventSender>, net: Res<NetworkResource>) {
+pub fn network_event_sender_system(
+    mut events: EventWriter<ConnectionEvent>,
+    sender: Res<NetworkEventSender>,
+    net: Res<NetworkResource>,
+) {
     for payload in sender.take() {
-        net.send(&payload).unwrap();
+        let connection_events = net.send(&payload);
+
+        events.send_batch(connection_events.into_iter());
     }
 }
 
