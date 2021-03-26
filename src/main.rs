@@ -19,7 +19,7 @@ use clap::Clap;
 struct Options {
     #[clap(short, long)]
     server: bool,
-    #[clap(short, long, default_value = "framefactorserver.ddns.net")]
+    #[clap(short, long, default_value = "framefactorserver.ddns.net:35566")]
     ip: String,
 }
 
