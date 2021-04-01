@@ -16,7 +16,7 @@ layout(set = 2, binding = 0) uniform ProgressBarMaterial_size {
 };
 
 void main() {
-    vec3 vertex = Vertex_Position * vec3(size, 0.0);
+    vec3 vertex = Vertex_Position * vec3(size, 1.0);
     gl_Position = ViewProj * Model * vec4(vertex, 1.0);
     v_Position = vertex.xy;
 }

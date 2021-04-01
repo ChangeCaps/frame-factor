@@ -4,6 +4,7 @@ use crate::input::*;
 use crate::networking::*;
 use crate::progress_bar::*;
 use crate::world_transform::*;
+use crate::animation::*;
 use bevy::prelude::*;
 
 #[derive(Serialize, Deserialize, TypeUuid)]
@@ -146,6 +147,11 @@ impl NetworkSpawnable for PlayerSpawner {
             health: max_health,
         };
 
+        let animation = world.get_resource::<Assets<Animation>>().unwrap().get_handle("frames/katana_one/walk.anim");
+
+        let mut animator = Animator::new();
+        animator.play(animation);
+
         let collider = Collider::from(frame.collision_box.clone());
 
         if world.get_resource::<NetworkSettings>().unwrap().is_server {
@@ -157,14 +163,6 @@ impl NetworkSpawnable for PlayerSpawner {
                 .insert(collider)
                 .id()
         } else {
-            let texture = world
-                .get_resource::<Assets<Texture>>()
-                .unwrap()
-                .get_handle("arrow.png");
-            let material = world
-                .get_resource_mut::<Assets<ColorMaterial>>()
-                .unwrap()
-                .add(texture.into());
             let progress_bar_material = world
                 .get_resource::<Assets<ProgressBarMaterial>>()
                 .unwrap()
@@ -172,8 +170,8 @@ impl NetworkSpawnable for PlayerSpawner {
 
             let entity = world
                 .spawn()
-                .insert_bundle(SpriteBundle {
-                    material,
+                .insert_bundle(AnimatorBundle {
+                    animator,
                     ..Default::default()
                 })
                 .insert(world_transform)

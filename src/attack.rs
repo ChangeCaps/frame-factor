@@ -4,11 +4,14 @@ use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize)]
 pub enum AttackEvent {
-    ActivateHitbox {
-        damage: f32,
-        hitbox: Vec<Vec2>,
-    },
+    /// Activates the hitbox and sets it.
+    ActivateHitbox { damage: f32, hitbox: Vec<Vec2> },
+    /// Deactivates the hitbox.
     DeactivateHitbox,
+    /// Enables the movement of the player.
+    EnableWalking,
+    /// Disables the movement of the player.
+    DisableWalking,
 }
 
 #[derive(Serialize, Deserialize, TypeUuid)]

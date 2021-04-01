@@ -1,3 +1,4 @@
+use crate::animation::*;
 use crate::collider::*;
 use crate::frame::*;
 use crate::game_state::*;
@@ -33,6 +34,7 @@ pub fn run(ip: String) {
         .add_plugin(PlayerPlugin)
         .add_plugin(FramePlugin)
         .add_plugin(CollisionPlugin)
+        .add_plugin(AnimationPlugin)
         // network events
         .register_network_event::<WorldTransformEvent>()
         // network spawnables
