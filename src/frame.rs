@@ -7,6 +7,7 @@ pub struct Frame {
     pub name: String,
     pub max_health: f32,
     pub walking_speed: f32,
+    pub collision_box: Vec<Vec2>,
 }
 
 pub struct FrameLoader;

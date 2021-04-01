@@ -1,3 +1,12 @@
+//! [`WorldTransform`] serves two purposes, the first being that
+//! we need a transform separate from the [`Transform`]. This is
+//! because we want to have 'heigh'. The higher an object is, the
+//! further along the y axis it goes. These kinds of transformations
+//! are possible in bevy, but not very easily, and would create problems
+//! concerning draw order. It also serves the purpose of smoothening the
+//! position difference on the client side, for when the tickrate of the
+//! server is lower than the frame rate of the client.
+
 use crate::networking::*;
 use bevy::prelude::*;
 
@@ -10,6 +19,7 @@ pub enum WorldTransformEvent {
 
 pub struct WorldTransform {
     pub translation: Vec3,
+    pub rotation: Mat3,
     pub target_translation: Option<Vec3>,
 }
 
@@ -17,8 +27,16 @@ impl WorldTransform {
     pub fn new(translation: Vec3) -> Self {
         Self {
             translation,
+            rotation: Mat3::from_rotation_z(0.0),
             target_translation: None,
         }
+    }
+
+    pub fn transform_point(&self, mut point: Vec3) -> Vec3 {
+        point = self.rotation * point;
+        point += self.translation;
+
+        point
     }
 }
 

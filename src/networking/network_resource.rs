@@ -58,7 +58,7 @@ impl Connection {
         let payload = self.recv_single()?;
 
         self.stream.set_nonblocking(true)?;
-        
+
         Ok(payload)
     }
 

@@ -1,6 +1,8 @@
+use crate::collider::*;
 use crate::frame::*;
 use crate::input::*;
 use crate::networking::*;
+use crate::progress_bar::*;
 use crate::world_transform::*;
 use bevy::prelude::*;
 
@@ -51,8 +53,9 @@ pub fn player_system(
         if player.movement_vector.length() > 0.0 {
             let frame = frames.get(&player.frame).unwrap();
 
-            world_transform.translation +=
-                player.movement_vector.extend(0.0) * frame.walking_speed * time.delta_seconds();
+            world_transform.translation += player.movement_vector.extend(0.0).normalize()
+                * frame.walking_speed
+                * time.delta_seconds();
         }
     }
 }
@@ -114,16 +117,23 @@ pub struct PlayerSpawner {
 
 impl NetworkSpawnable for PlayerSpawner {
     fn spawn(&self, world: &mut World) -> Entity {
+        println!("spawning: {:?}", self.player_id);
+
         let world_transform = WorldTransform::new(Vec3::new(0.0, 0.0, 0.0));
 
+        let frames = world.get_resource::<Assets<Frame>>().unwrap();
+
+        let frame_handle = frames.get_handle(self.frame.as_str());
+
+        let frame = frames.get(&frame_handle).unwrap();
+
         let player = Player {
-            frame: world
-                .get_resource::<Assets<Frame>>()
-                .unwrap()
-                .get_handle(self.frame.as_str()),
+            frame: frame_handle,
             movement_vector: Vec2::ZERO,
             actor_id: self.player_id,
         };
+
+        let collider = Collider::from(frame.collision_box.clone());
 
         if world.get_resource::<NetworkSettings>().unwrap().is_server {
             world
@@ -131,6 +141,7 @@ impl NetworkSpawnable for PlayerSpawner {
                 .insert(Transform::identity())
                 .insert(world_transform)
                 .insert(player)
+                .insert(collider)
                 .id()
         } else {
             let texture = world
@@ -141,6 +152,10 @@ impl NetworkSpawnable for PlayerSpawner {
                 .get_resource_mut::<Assets<ColorMaterial>>()
                 .unwrap()
                 .add(texture.into());
+            let progress_bar_material = world
+                .get_resource::<Assets<ProgressBarMaterial>>()
+                .unwrap()
+                .get_handle("misc/health_bar.pb");
 
             let entity = world
                 .spawn()
@@ -150,6 +165,14 @@ impl NetworkSpawnable for PlayerSpawner {
                 })
                 .insert(world_transform)
                 .insert(player)
+                .with_children(|world| {
+                    world.spawn()
+                        .insert(ProgressBarBundle {
+                            material: progress_bar_material,
+                            transform: Transform::from_translation(Vec3::new(0.0, 90.0, 0.0)),
+                            ..Default::default()
+                        });
+                })
                 .id();
 
             if world.get_resource::<NetworkResource>().unwrap().local_id == self.player_id {

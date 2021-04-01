@@ -12,7 +12,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-#[derive(Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct NetworkEntity(u64);
 
 pub struct NetworkEntityRegistry {
@@ -39,7 +39,9 @@ impl NetworkEntityRegistry {
     }
 
     pub fn insert(&mut self, network_entity: NetworkEntity, entity: Entity) {
-        self.entities.insert(network_entity, entity);
+        if self.entities.insert(network_entity, entity).is_some() {
+            error!("Two entities have been assigned to the same network entity");
+        }
     }
 
     pub fn add(&mut self, entity: Entity) -> NetworkEntity {
@@ -143,8 +145,6 @@ pub fn network_spawner_system(world: &mut World) {
                 for event in connection_events {
                     events.send(event);
                 }
-
-                network_spawner.spawn_payload(world, &payload);
             }
 
             for uuid in network_spawner.spawnables.keys() {

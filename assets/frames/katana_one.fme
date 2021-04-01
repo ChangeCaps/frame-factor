@@ -1,5 +1,0 @@
-Frame(
-    name: "Katana One",
-    max_health: 500.0,
-    walking_speed: 48.0,
-)

@@ -1,8 +1,10 @@
+use crate::collider::*;
 use crate::frame::*;
 use crate::input::*;
 use crate::networking::*;
 use crate::player::*;
 use crate::world_transform::*;
+use crate::progress_bar::*;
 use bevy::prelude::*;
 
 #[derive(Serialize, Deserialize, TypeUuid)]
@@ -21,6 +23,8 @@ pub fn run(ip: String) {
         .add_plugin(PlayerPlugin)
         .add_plugin(InputPlugin)
         .add_plugin(FramePlugin)
+        .add_plugin(CollisionPlugin)
+        .add_plugin(ProgressBarPlugin)
         // network events
         .register_network_event::<WorldTransformEvent>()
         // network spawnables
@@ -36,6 +40,8 @@ pub fn run(ip: String) {
 fn setup_system(mut commands: Commands, asset_server: Res<AssetServer>) {
     asset_server.watch_for_changes().unwrap();
     let handles = asset_server.load_folder(".").unwrap();
+
+    std::thread::sleep_ms(50); // FIXME: please
 
     commands
         .spawn()

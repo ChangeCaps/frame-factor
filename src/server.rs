@@ -1,3 +1,4 @@
+use crate::collider::*;
 use crate::frame::*;
 use crate::game_state::*;
 use crate::networking::*;
@@ -31,6 +32,7 @@ pub fn run(ip: String) {
         .add_plugin(NetworkPlugin::server(ip))
         .add_plugin(PlayerPlugin)
         .add_plugin(FramePlugin)
+        .add_plugin(CollisionPlugin)
         // network events
         .register_network_event::<WorldTransformEvent>()
         // network spawnables
@@ -45,10 +47,7 @@ pub fn run(ip: String) {
         .run();
 }
 
-fn startup_system(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>
-) {
+fn startup_system(mut commands: Commands, asset_server: Res<AssetServer>) {
     asset_server.watch_for_changes().unwrap();
     let handles = asset_server.load_folder(".").unwrap();
 
@@ -78,7 +77,7 @@ fn connection_system(
 
                     for id in &players.players {
                         network_spawner.spawn(PlayerSpawner {
-                            frame: String::from("frames/katana_one.fme"),
+                            frame: String::from("frames/katana_one/frame.fme"),
                             player_id: *id,
                         });
                     }

@@ -1,6 +1,8 @@
 //! The Frame Factor code base.
 
+mod attack;
 mod client;
+mod collider;
 mod frame;
 mod game_settings;
 mod game_state;
@@ -8,6 +10,7 @@ mod helper;
 mod input;
 mod networking;
 mod player;
+mod progress_bar;
 mod server;
 mod world_transform;
 
