@@ -7,3 +7,7 @@ pub struct Attack {
     pub damage: f32,
     pub hitbox: Vec<Vec2>,
 }
+
+pub struct AttackLoader;
+
+crate::ron_loader!(AttackLoader, "atk" => Attack);

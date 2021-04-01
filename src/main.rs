@@ -13,6 +13,7 @@ mod player;
 mod progress_bar;
 mod server;
 mod world_transform;
+mod camera;
 
 use clap::Clap;
 

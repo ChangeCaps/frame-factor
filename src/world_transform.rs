@@ -56,11 +56,11 @@ pub fn world_transform_system(
             }
         }
 
-        transform.translation = world_transform.translation;
+        transform.translation = world_transform.translation * 32.0;
 
         if network_settings.is_server {
             event_sender
-                .send(&WorldTransformEvent::SetTargetTranslation(
+                .send(&WorldTransformEvent::SetTranslation(
                     *network_entity,
                     world_transform.translation,
                 ))

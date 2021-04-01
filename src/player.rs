@@ -166,12 +166,11 @@ impl NetworkSpawnable for PlayerSpawner {
                 .insert(world_transform)
                 .insert(player)
                 .with_children(|world| {
-                    world.spawn()
-                        .insert(ProgressBarBundle {
-                            material: progress_bar_material,
-                            transform: Transform::from_translation(Vec3::new(0.0, 90.0, 0.0)),
-                            ..Default::default()
-                        });
+                    world.spawn_bundle(ProgressBarBundle {
+                        material: progress_bar_material,
+                        transform: Transform::from_translation(Vec3::new(0.0, 90.0, 0.0)),
+                        ..Default::default()
+                    });
                 })
                 .id();
 

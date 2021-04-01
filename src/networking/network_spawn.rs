@@ -131,8 +131,8 @@ impl NetworkSpawner {
 }
 
 pub fn network_spawner_system(world: &mut World) {
-    world.resource_scope(|mut messages: Mut<NetworkMessages>, world| {
-        world.resource_scope(|network_spawner: Mut<NetworkSpawner>, world| {
+    world.resource_scope(|world, mut messages: Mut<NetworkMessages>| {
+        world.resource_scope(|world, network_spawner: Mut<NetworkSpawner>| {
             for payload in network_spawner.take_spawns(world) {
                 let net = world.get_resource::<NetworkResource>().unwrap();
 
