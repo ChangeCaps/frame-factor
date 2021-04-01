@@ -10,16 +10,16 @@ use bevy::{
 };
 use serde::{Deserialize, Serialize};
 
-const PIPELINE_HANDLE: HandleUntyped =
+pub const PROGRESS_BAR_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 64184235874523);
 
-#[derive(RenderResources)]
+#[derive(RenderResources, Default)]
 pub struct ProgressBar {
     pub value: f32,
-    pub max: f32,
+    pub value_max: f32,
 }
 
-#[derive(Serialize, Deserialize, RenderResources, TypeUuid)]
+#[derive(Serialize, Deserialize, RenderResources, TypeUuid, Default)]
 #[uuid = "14452f74-4e78-4aae-a737-76f30962be5f"]
 pub struct ProgressBarMaterial {
     pub size: Vec2,
@@ -51,15 +51,18 @@ impl Default for ProgressBarBundle {
         Self {
             progress_bar: ProgressBar {
                 value: 50.0,
-                max: 100.0,
+                value_max: 100.0,
             },
             material: Default::default(),
             mesh: bevy::sprite::QUAD_HANDLE.typed(),
             main_pass: Default::default(),
             draw: Default::default(),
-            visible: Default::default(),
+            visible: Visible {
+                is_transparent: true,
+                ..Default::default()
+            },
             render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
-                PIPELINE_HANDLE.typed(),
+                PROGRESS_BAR_PIPELINE_HANDLE.typed(),
             )]),
             transform: Default::default(),
             global_transform: Default::default(),
@@ -74,6 +77,29 @@ impl Plugin for ProgressBarPlugin {
         app_builder.add_asset::<ProgressBarMaterial>();
         app_builder.add_asset_loader(ProgressBarLoader);
 
+        let mut render_graph = app_builder
+            .world_mut()
+            .get_resource_mut::<RenderGraph>()
+            .unwrap();
+
+        // progress bar
+        render_graph.add_system_node(
+            "progress_bar",
+            RenderResourcesNode::<ProgressBar>::new(true),
+        );
+        render_graph
+            .add_node_edge("progress_bar", base::node::MAIN_PASS)
+            .unwrap();
+
+        // progress bar material
+        render_graph.add_system_node(
+            "progress_bar_material",
+            AssetRenderResourcesNode::<ProgressBarMaterial>::new(true),
+        );
+        render_graph
+            .add_node_edge("progress_bar_material", base::node::MAIN_PASS)
+            .unwrap();
+
         let asset_server = app_builder.world().get_resource::<AssetServer>().unwrap();
         asset_server.watch_for_changes().unwrap();
 
@@ -85,34 +111,11 @@ impl Plugin for ProgressBarPlugin {
             .get_resource_mut::<Assets<PipelineDescriptor>>()
             .unwrap()
             .set_untracked(
-                PIPELINE_HANDLE,
+                PROGRESS_BAR_PIPELINE_HANDLE,
                 PipelineDescriptor::default_config(ShaderStages {
                     vertex: vert,
                     fragment: Some(frag),
                 }),
             );
-
-        let mut render_graph = app_builder
-            .world_mut()
-            .get_resource_mut::<RenderGraph>()
-            .unwrap();
-
-        // progress bar
-        render_graph.add_node(
-            "progress_bar",
-            RenderResourcesNode::<ProgressBar>::new(true),
-        );
-        render_graph
-            .add_node_edge("progress_bar", base::node::MAIN_PASS)
-            .unwrap();
-
-        // progress bar material
-        render_graph.add_node(
-            "progress_bar_material",
-            AssetRenderResourcesNode::<ProgressBarMaterial>::new(false),
-        );
-        render_graph
-            .add_node_edge("progress_bar_material", base::node::MAIN_PASS)
-            .unwrap();
     }
 }
