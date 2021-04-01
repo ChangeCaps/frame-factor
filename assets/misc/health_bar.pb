@@ -1,15 +1,15 @@
 ProgressBarMaterial(
     size: (150.0, 20.0),
     color_light: Rgba(
-        red: 1.0,
-        green: 0.0,
-        blue: 0.0,
+        red: 0.2,
+        green: 1.0,
+        blue: 1.0,
         alpha: 1.0,
     ),
     color_dark: Rgba(
-        red: 0.5,
-        green: 0.0,
-        blue: 0.0,
+        red: 0.0,
+        green: 0.9,
+        blue: 0.9,
         alpha: 1.0,
     ),
     color_bg: Rgba(
