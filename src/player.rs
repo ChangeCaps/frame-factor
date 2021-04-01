@@ -129,8 +129,6 @@ pub struct PlayerSpawner {
 
 impl NetworkSpawnable for PlayerSpawner {
     fn spawn(&self, world: &mut World) -> Entity {
-        println!("spawning: {:?}", self.player_id);
-
         let world_transform = WorldTransform::new(Vec3::new(0.0, 0.0, 0.0));
 
         let frames = world.get_resource::<Assets<Frame>>().unwrap();
