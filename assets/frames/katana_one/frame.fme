@@ -1,7 +1,7 @@
 Frame(
     name: "Katana One",
     max_health: 500.0,
-    walking_speed: 48.0,
+    walking_speed: 6.5,
     collision_box: [
         (-0.207, 0.502),
         (0.207, 0.502),
