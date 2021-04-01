@@ -14,16 +14,17 @@ pub enum PlayerInputEvent {
 }
 
 pub struct Player {
-    frame: Handle<Frame>,
-    movement_vector: Vec2,
-    actor_id: ActorId,
+    pub frame: Handle<Frame>,
+    pub movement_vector: Vec2,
+    pub actor_id: ActorId,
+    pub health: f32,
 }
 
 pub struct PlayerResource {
     player_entity: Option<Entity>,
 }
 
-pub fn player_system(
+pub fn player_server_system(
     time: Res<Time>,
     network_entity_registry: Res<NetworkEntityRegistry>,
     frames: Res<Assets<Frame>>,
@@ -108,6 +109,17 @@ pub fn player_input_system(
     }
 }
 
+pub fn player_client_system(
+    player_query: Query<(&Player, &Children)>,
+    mut health_bar_query: Query<&mut ProgressBar>,
+) {
+    for (player, children) in player_query.iter() {
+        let mut health_bar = health_bar_query.get_mut(children[0]).unwrap();
+
+        health_bar.value = player.health;
+    }
+}
+
 #[derive(TypeUuid, Clone, Serialize, Deserialize)]
 #[uuid = "053c55fe-dcd8-4746-829f-51760445739e"]
 pub struct PlayerSpawner {
@@ -127,10 +139,13 @@ impl NetworkSpawnable for PlayerSpawner {
 
         let frame = frames.get(&frame_handle).unwrap();
 
+        let max_health = frame.max_health;
+
         let player = Player {
             frame: frame_handle,
             movement_vector: Vec2::ZERO,
             actor_id: self.player_id,
+            health: max_health,
         };
 
         let collider = Collider::from(frame.collision_box.clone());
@@ -167,6 +182,10 @@ impl NetworkSpawnable for PlayerSpawner {
                 .insert(player)
                 .with_children(|world| {
                     world.spawn_bundle(ProgressBarBundle {
+                        progress_bar: ProgressBar {
+                            value: max_health,
+                            value_max: max_health,
+                        },
                         material: progress_bar_material,
                         transform: Transform::from_translation(Vec3::new(0.0, 90.0, 0.0)),
                         ..Default::default()
@@ -200,9 +219,10 @@ impl Plugin for PlayerPlugin {
         app_builder.register_network_spawnable::<PlayerSpawner>();
 
         if is_server {
-            app_builder.add_system(player_system.system());
+            app_builder.add_system(player_server_system.system());
         } else {
             app_builder.add_system(player_input_system.system());
+            app_builder.add_system(player_client_system.system());
 
             app_builder.insert_resource(PlayerResource {
                 player_entity: None,

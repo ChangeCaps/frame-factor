@@ -23,6 +23,10 @@ layout(set = 2, binding = 4) uniform ProgressBarMaterial_color_fg {
     vec4 color_fg;
 };
 
+layout(set = 2, binding = 5) buffer ProgressBarMaterial_sections {
+    float[] sections;
+};
+
 layout(set = 3, binding = 0) uniform ProgressBar_value {
     float value;
 };
@@ -48,6 +52,12 @@ void main() {
 
     if (size.x / 2.0 - abs(v_Position.x) < border || size.y / 2.0 - abs(v_Position.y) < border) {
         color = color_fg;
+    }
+
+    for (int i = 0; i < sections.length(); i++) {
+        if (abs(sections[i] - (width + 0.5)) * size.x < border / 2.0) {
+            color = color_fg;
+        }
     }
 
     o_Target = color;

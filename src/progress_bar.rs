@@ -5,7 +5,7 @@ use bevy::{
         pipeline::{PipelineDescriptor, RenderPipeline},
         render_graph::{base, AssetRenderResourcesNode, RenderGraph, RenderResourcesNode},
         renderer::RenderResources,
-        shader::ShaderStages,
+        shader::{ShaderDefs, ShaderStages},
     },
 };
 use serde::{Deserialize, Serialize};
@@ -27,6 +27,8 @@ pub struct ProgressBarMaterial {
     pub color_dark: Color,
     pub color_bg: Color,
     pub color_fg: Color,
+    #[render_resources(buffer)]
+    pub sections: Vec<f32>,
 }
 
 pub struct ProgressBarLoader;
@@ -94,7 +96,7 @@ impl Plugin for ProgressBarPlugin {
         // progress bar material
         render_graph.add_system_node(
             "progress_bar_material",
-            AssetRenderResourcesNode::<ProgressBarMaterial>::new(true),
+            AssetRenderResourcesNode::<ProgressBarMaterial>::new(false),
         );
         render_graph
             .add_node_edge("progress_bar_material", base::node::MAIN_PASS)
