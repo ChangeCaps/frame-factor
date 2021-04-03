@@ -1,7 +1,7 @@
 Frame(
-    name: "Katana One",
-    max_health: 100.0,
-    walking_speed: 6.5,
+    name: "Bow Man",
+    max_health: 500.0,
+    walking_speed: 48.0,
     collision_box: [
         (-0.207, 0.502),
         (0.207, 0.502),
@@ -12,6 +12,5 @@ Frame(
         (-0.501, -0.208),
         (-0.501, 0.208),
     ],
-    idle_animation: "frames/katana_one/idle.anim",
-    light_attack: "frames/katana_one/slash1.atk",
+    light_attack: "",
 )

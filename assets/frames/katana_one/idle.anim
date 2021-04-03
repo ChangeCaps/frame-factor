@@ -1,8 +1,8 @@
 Animation(
-    image: "frames/katana_one/slash.png",
+    image: "character.png",
     columns: 3,
     rows: 4,
     length: 12,
-    fps: 24.0,
+    fps: 4.0,
     looping: true,
 )

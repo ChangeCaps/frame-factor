@@ -1,4 +1,5 @@
 use crate::animation::*;
+use crate::attack::*;
 use crate::collider::*;
 use crate::frame::*;
 use crate::input::*;
@@ -18,6 +19,9 @@ pub fn run(ip: String) {
     let payload = NetworkPayload::new(&greeting, ClientGreeting::TYPE_UUID);
 
     App::build()
+        // resources
+        .insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities)
+        .insert_resource(Msaa { samples: 4 })
         // plugins
         .add_plugins(DefaultPlugins)
         .add_plugin(NetworkPlugin::client(ip, payload))
@@ -27,6 +31,7 @@ pub fn run(ip: String) {
         .add_plugin(CollisionPlugin)
         .add_plugin(ProgressBarPlugin)
         .add_plugin(AnimationPlugin)
+        .add_plugin(AttackPlugin)
         // network events
         .register_network_event::<WorldTransformEvent>()
         // network spawnables
@@ -43,11 +48,15 @@ fn setup_system(mut commands: Commands, asset_server: Res<AssetServer>) {
     asset_server.watch_for_changes().unwrap();
     let handles = asset_server.load_folder(".").unwrap();
 
-    std::thread::sleep_ms(50); // FIXME: please
+    std::thread::sleep_ms(100); // FIXME: please
 
-    commands
-        .spawn()
-        .insert_bundle(OrthographicCameraBundle::new_2d());
+    let mut camera_bundle = OrthographicCameraBundle::new_2d();
+
+    camera_bundle.orthographic_projection.scaling_mode =
+        bevy::render::camera::ScalingMode::FixedVertical;
+    camera_bundle.orthographic_projection.scale = 324.0;
+
+    commands.spawn().insert_bundle(camera_bundle);
 
     commands.insert_resource(handles);
 }

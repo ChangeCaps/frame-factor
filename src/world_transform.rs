@@ -10,6 +10,8 @@
 use crate::networking::*;
 use bevy::prelude::*;
 
+const YZ_RATIO: f32 = 1.0 / 2048.0;
+
 #[derive(Serialize, Deserialize, TypeUuid)]
 #[uuid = "d4acd5da-0fdd-412c-9c6b-96ed1bca3595"]
 pub enum WorldTransformEvent {
@@ -19,7 +21,7 @@ pub enum WorldTransformEvent {
 
 pub struct WorldTransform {
     pub translation: Vec3,
-    pub rotation: Mat3,
+    pub rotation: f32,
     pub target_translation: Option<Vec3>,
 }
 
@@ -27,16 +29,9 @@ impl WorldTransform {
     pub fn new(translation: Vec3) -> Self {
         Self {
             translation,
-            rotation: Mat3::from_rotation_z(0.0),
+            rotation: 0.0,
             target_translation: None,
         }
-    }
-
-    pub fn transform_point(&self, mut point: Vec3) -> Vec3 {
-        point = self.rotation * point;
-        point += self.translation;
-
-        point
     }
 }
 
@@ -57,6 +52,7 @@ pub fn world_transform_system(
         }
 
         transform.translation = world_transform.translation * 32.0;
+        transform.translation.z = world_transform.translation.y * -YZ_RATIO;
 
         if network_settings.is_server {
             event_sender

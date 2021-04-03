@@ -1,5 +1,6 @@
 //! The Frame Factor code base.
 
+mod angle;
 mod animation;
 mod attack;
 mod camera;

@@ -1,3 +1,4 @@
+use crate::attack::*;
 use crate::networking::*;
 use bevy::prelude::*;
 
@@ -8,6 +9,16 @@ pub struct Frame {
     pub max_health: f32,
     pub walking_speed: f32,
     pub collision_box: Vec<Vec2>,
+    pub idle_animation: String,
+    pub light_attack: String,
+}
+
+impl Frame {
+    pub fn get_attack(&self, attack_type: &AttackType) -> &String {
+        match attack_type {
+            AttackType::LightAttack => &self.light_attack,
+        }
+    }
 }
 
 pub struct FrameLoader;

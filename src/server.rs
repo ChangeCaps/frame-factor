@@ -1,4 +1,5 @@
 use crate::animation::*;
+use crate::attack::*;
 use crate::collider::*;
 use crate::frame::*;
 use crate::game_state::*;
@@ -22,12 +23,14 @@ impl Players {
 pub fn run(ip: String) {
     App::build()
         // resources
+        .insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities)
         .insert_resource(bevy::app::ScheduleRunnerSettings::run_loop(
-            std::time::Duration::from_secs_f32(1.0 / 40.0),
+            std::time::Duration::from_secs_f32(1.0 / 48.0),
         ))
         .insert_resource(Players::new())
         // plugins
         .add_plugins(MinimalPlugins)
+        .add_plugin(bevy::transform::TransformPlugin)
         .add_plugin(bevy::asset::AssetPlugin)
         .add_plugin(bevy::log::LogPlugin)
         .add_plugin(NetworkPlugin::server(ip))
@@ -35,6 +38,7 @@ pub fn run(ip: String) {
         .add_plugin(FramePlugin)
         .add_plugin(CollisionPlugin)
         .add_plugin(AnimationPlugin)
+        .add_plugin(AttackPlugin)
         // network events
         .register_network_event::<WorldTransformEvent>()
         // network spawnables
