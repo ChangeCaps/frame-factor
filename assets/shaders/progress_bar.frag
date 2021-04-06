@@ -46,7 +46,7 @@ void main() {
         color = color_dark;
     }
 
-    if (progress < width + 0.5) {
+    if (progress * (1.0 - (border / size.x)) < width + 0.5) {
         color = color_bg;
     }
 

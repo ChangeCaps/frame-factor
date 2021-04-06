@@ -5,6 +5,7 @@ use crate::frame::*;
 use crate::input::*;
 use crate::networking::*;
 use crate::progress_bar::*;
+use crate::camera::*;
 use crate::world_transform::*;
 use bevy::prelude::*;
 
@@ -190,10 +191,11 @@ pub fn player_input_system(
     mouse_input: Res<Input<MouseButton>>,
     event_sender: Res<NetworkEventSender>,
     player_resource: Res<PlayerResource>,
-    mut query: Query<(&NetworkEntity, &mut Player)>,
+    mouse: Res<Mouse>,
+    mut query: Query<(&NetworkEntity, &mut Player, &Transform)>,
 ) {
     if let Some(entity) = player_resource.player_entity {
-        let (network_entity, mut player) = query.get_mut(entity).unwrap();
+        let (network_entity, mut player, transform) = query.get_mut(entity).unwrap();
 
         let input_ctx = InputCtx {
             keyboard: &*keyboard_input,
@@ -230,6 +232,17 @@ pub fn player_input_system(
             .unwrap();
 
         player.movement_vector = movement_vector;
+
+        // rotation
+        let diff = transform.translation.truncate() - mouse.world_position;
+        let rotation = diff.y.atan2(diff.x) + std::f32::consts::PI / 2.0;
+
+        event_sender
+            .send(&PlayerInputEvent::SetRotation(
+                *network_entity,
+                rotation,
+            ))
+            .unwrap();
 
         // attacks
 

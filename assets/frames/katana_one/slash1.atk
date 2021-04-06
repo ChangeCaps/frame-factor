@@ -1,8 +1,8 @@
 Attack (
     animation: "frames/katana_one/slash.anim",
     events: {
-        0: [
-            Stun(24),
+        1: [
+            Stun(16),
         ],
         2: [
             ActivateHitbox(

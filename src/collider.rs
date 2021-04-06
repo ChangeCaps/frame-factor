@@ -11,9 +11,7 @@ pub struct Collider {
 
 impl From<Vec<Vec2>> for Collider {
     fn from(vec: Vec<Vec2>) -> Self {
-        Self {
-            polygon: vec,
-        }
+        Self { polygon: vec }
     }
 }
 
@@ -69,19 +67,27 @@ pub fn collision_system(
             continue;
         }
 
-        let a_points = a_collider.polygon.iter().map(|v| {
-            let mut v = v.extend(0.0);
-            v = a_transform.compute_matrix().transform_point3(v * 32.0);
+        let a_points = a_collider
+            .polygon
+            .iter()
+            .map(|v| {
+                let mut v = v.extend(0.0);
+                v = a_transform.compute_matrix().transform_point3(v * 32.0);
 
-            (v.x, v.y)
-        }).collect::<Vec<_>>();
+                (v.x, v.y)
+            })
+            .collect::<Vec<_>>();
 
-        let b_points = b_collider.polygon.iter().map(|v| {
-            let mut v = v.extend(0.0);
-            v = b_transform.compute_matrix().transform_point3(v * 32.0);
+        let b_points = b_collider
+            .polygon
+            .iter()
+            .map(|v| {
+                let mut v = v.extend(0.0);
+                v = b_transform.compute_matrix().transform_point3(v * 32.0);
 
-            (v.x, v.y)
-        }).collect::<Vec<_>>();
+                (v.x, v.y)
+            })
+            .collect::<Vec<_>>();
 
         let mut a_lines = LineString::from(a_points);
         let mut b_lines = LineString::from(b_points);

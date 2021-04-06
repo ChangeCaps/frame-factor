@@ -1,5 +1,6 @@
 use crate::animation::*;
 use crate::attack::*;
+use crate::camera::*;
 use crate::collider::*;
 use crate::frame::*;
 use crate::input::*;
@@ -22,6 +23,7 @@ pub fn run(ip: String) {
         // resources
         .insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities)
         .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Mouse::default())
         // plugins
         .add_plugins(DefaultPlugins)
         .add_plugin(NetworkPlugin::client(ip, payload))
@@ -36,6 +38,7 @@ pub fn run(ip: String) {
         .register_network_event::<WorldTransformEvent>()
         // network spawnables
         // systems
+        .add_system(mouse_system.system())
         .add_system(world_transform_system.system())
         .add_system(world_transform_network_system.system())
         // startup systems
@@ -56,7 +59,10 @@ fn setup_system(mut commands: Commands, asset_server: Res<AssetServer>) {
         bevy::render::camera::ScalingMode::FixedVertical;
     camera_bundle.orthographic_projection.scale = 324.0;
 
-    commands.spawn().insert_bundle(camera_bundle);
+    commands
+        .spawn()
+        .insert_bundle(camera_bundle)
+        .insert(MainCamera);
 
     commands.insert_resource(handles);
 }
