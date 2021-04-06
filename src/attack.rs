@@ -2,7 +2,7 @@ use crate::animation::*;
 use crate::collider::*;
 use crate::networking::*;
 use crate::player::*;
-use crate::world_transform::*;
+use crate::transform::*;
 use bevy::prelude::*;
 use std::collections::HashMap;
 
@@ -65,7 +65,7 @@ pub fn attack_server_system(
         &mut AttackController,
         &mut Player,
         &Animator,
-        &WorldTransform,
+        &Transform,
     )>,
 ) {
     for (entity, network_entity, mut attack_controller, mut player, animator, world_transform) in
@@ -100,7 +100,7 @@ pub fn attack_server_system(
                                         stun: *stun,
                                         damage: *damage,
                                     },
-                                    rotation: world_transform.rotation,
+                                    direction: player.aim_direction,
                                     hitbox: hitbox.clone(),
                                 };
 
@@ -152,7 +152,7 @@ pub struct AttackHitSpawner {
     pub parent: NetworkEntity,
     pub animation: String,
     pub damage: Damage,
-    pub rotation: f32,
+    pub direction: Vec2,
     pub hitbox: Vec<Vec2>,
 }
 
@@ -166,7 +166,8 @@ impl NetworkSpawnable for AttackHitSpawner {
             .get(&self.parent)
             .unwrap();
 
-        let transform = Transform::from_rotation(Quat::from_rotation_z(self.rotation));
+        let rotation = self.direction.y.atan2(self.direction.x);
+        let transform = Transform::from_rotation(Quat::from_rotation_z(rotation));
 
         let mut animator = Animator::new();
         animator.play(self.animation.clone());

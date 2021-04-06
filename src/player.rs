@@ -1,12 +1,12 @@
 use crate::animation::*;
 use crate::attack::*;
+use crate::camera::*;
 use crate::collider::*;
 use crate::frame::*;
 use crate::input::*;
 use crate::networking::*;
 use crate::progress_bar::*;
-use crate::camera::*;
-use crate::world_transform::*;
+use crate::transform::*;
 use bevy::prelude::*;
 
 #[derive(Serialize, Deserialize, TypeUuid)]
@@ -24,7 +24,7 @@ pub enum PlayerInputEvent {
     // TODO: consider removing the NetworkEntity and just look up the senders player.
     SetMovement(NetworkEntity, Vec2),
     Attack(NetworkEntity, AttackType),
-    SetRotation(NetworkEntity, f32),
+    SetAimDirection(NetworkEntity, Vec2),
 }
 
 pub struct Player {
@@ -35,6 +35,7 @@ pub struct Player {
     pub update_health: bool,
     pub stun: Option<u32>,
     pub attacking: bool,
+    pub aim_direction: Vec2,
 }
 
 impl Player {
@@ -76,7 +77,7 @@ pub fn player_server_system(
         &mut Player,
         &mut Animator,
         &mut AttackController,
-        &mut WorldTransform,
+        &mut Transform,
     )>,
 ) {
     // update players
@@ -170,15 +171,15 @@ pub fn player_server_system(
                     .unwrap();
             }
 
-            PlayerInputEvent::SetRotation(network_entity, rotation) => {
+            PlayerInputEvent::SetAimDirection(network_entity, aim_direction) => {
                 let entity = network_entity_registry.get(&network_entity).unwrap();
-                let (_, player, _, _, mut world_transform) = query.get_mut(entity).unwrap();
+                let (_, mut player, _, _, mut world_transform) = query.get_mut(entity).unwrap();
 
                 if player.actor_id != sender {
                     continue;
                 }
 
-                world_transform.rotation = rotation;
+                player.aim_direction = aim_direction;
             }
         }
     }
@@ -235,12 +236,11 @@ pub fn player_input_system(
 
         // rotation
         let diff = transform.translation.truncate() - mouse.world_position;
-        let rotation = diff.y.atan2(diff.x) + std::f32::consts::PI / 2.0;
 
         event_sender
-            .send(&PlayerInputEvent::SetRotation(
+            .send(&PlayerInputEvent::SetAimDirection(
                 *network_entity,
-                rotation,
+                diff.normalize(),
             ))
             .unwrap();
 
@@ -319,8 +319,6 @@ pub struct PlayerSpawner {
 
 impl NetworkSpawnable for PlayerSpawner {
     fn spawn(&self, world: &mut World) -> Entity {
-        let world_transform = WorldTransform::new(Vec3::new(0.0, 0.0, 0.0));
-
         let frames = world.get_resource::<Assets<Frame>>().unwrap();
 
         let frame_handle = frames.get_handle(self.frame.as_str());
@@ -337,6 +335,7 @@ impl NetworkSpawnable for PlayerSpawner {
             update_health: false,
             stun: None,
             attacking: false,
+            aim_direction: Vec2::new(1.0, 0.0),
         };
 
         let mut animator = Animator::new();
@@ -349,7 +348,6 @@ impl NetworkSpawnable for PlayerSpawner {
                 .spawn()
                 .insert(Transform::identity())
                 .insert(GlobalTransform::identity())
-                .insert(world_transform)
                 .insert(player)
                 .insert(collider)
                 .insert(animator)
@@ -367,7 +365,6 @@ impl NetworkSpawnable for PlayerSpawner {
                     animator,
                     ..Default::default()
                 })
-                .insert(world_transform)
                 .insert(player)
                 .with_children(|world| {
                     world.spawn_bundle(ProgressBarBundle {

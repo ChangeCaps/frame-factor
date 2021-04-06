@@ -60,6 +60,10 @@ impl Animator {
     }
 
     pub fn advance(&mut self, animation: &Animation, delta_time: f32) {
+        if self.play_time == 0.0 {
+            self.just_advanced = true;
+        }
+
         self.columns = animation.columns;
         self.rows = animation.rows;
 
@@ -117,7 +121,6 @@ impl Animator {
     pub fn play(&mut self, animation: impl Into<String>) {
         self.stop();
         self.animation = Some(animation.into());
-        self.just_advanced = true;
     }
 
     pub fn stop(&mut self) {

@@ -7,9 +7,10 @@ use crate::input::*;
 use crate::networking::*;
 use crate::player::*;
 use crate::progress_bar::*;
-use crate::world_transform::*;
+use crate::transform::*;
 use bevy::prelude::*;
 
+/// When connecting to the server, the client send a [´ClientGreeting´].
 #[derive(Serialize, Deserialize, TypeUuid)]
 #[uuid = "9968f81b-59da-4292-8015-d6d4bbccb5c7"]
 pub struct ClientGreeting {}
@@ -35,12 +36,12 @@ pub fn run(ip: String) {
         .add_plugin(AnimationPlugin)
         .add_plugin(AttackPlugin)
         // network events
-        .register_network_event::<WorldTransformEvent>()
+        .register_network_event::<TransformEvent>()
         // network spawnables
         // systems
         .add_system(mouse_system.system())
-        .add_system(world_transform_system.system())
-        .add_system(world_transform_network_system.system())
+        .add_system(transform_z_sort_system.system())
+        .add_system(transform_client_system.system())
         // startup systems
         .add_startup_system(setup_system.system())
         .run();

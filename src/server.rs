@@ -5,7 +5,7 @@ use crate::frame::*;
 use crate::game_state::*;
 use crate::networking::*;
 use crate::player::*;
-use crate::world_transform::*;
+use crate::transform::*;
 use bevy::prelude::*;
 
 pub struct Players {
@@ -40,12 +40,12 @@ pub fn run(ip: String) {
         .add_plugin(AnimationPlugin)
         .add_plugin(AttackPlugin)
         // network events
-        .register_network_event::<WorldTransformEvent>()
+        .register_network_event::<TransformEvent>()
         // network spawnables
         // state
         .add_state(GameState::Connection)
         // systems
-        .add_system(world_transform_system.system())
+        .add_system(transform_server_system.system())
         .add_system(connection_system.system())
         // startup systems
         .add_startup_system(startup_system.system())

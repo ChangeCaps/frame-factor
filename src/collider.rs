@@ -72,7 +72,7 @@ pub fn collision_system(
             .iter()
             .map(|v| {
                 let mut v = v.extend(0.0);
-                v = a_transform.compute_matrix().transform_point3(v * 32.0);
+                v = a_transform.compute_matrix().transform_point3(v);
 
                 (v.x, v.y)
             })
@@ -83,7 +83,7 @@ pub fn collision_system(
             .iter()
             .map(|v| {
                 let mut v = v.extend(0.0);
-                v = b_transform.compute_matrix().transform_point3(v * 32.0);
+                v = b_transform.compute_matrix().transform_point3(v);
 
                 (v.x, v.y)
             })

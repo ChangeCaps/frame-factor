@@ -15,7 +15,7 @@ mod networking;
 mod player;
 mod progress_bar;
 mod server;
-mod world_transform;
+mod transform;
 
 use clap::Clap;
 
