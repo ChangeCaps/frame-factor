@@ -366,6 +366,7 @@ impl NetworkSpawnable for PlayerSpawner {
                     ..Default::default()
                 })
                 .insert(player)
+                .insert(ZSort)
                 .with_children(|world| {
                     world.spawn_bundle(ProgressBarBundle {
                         progress_bar: ProgressBar {

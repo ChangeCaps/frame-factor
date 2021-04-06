@@ -1,12 +1,3 @@
-//! [`WorldTransform`] serves two purposes, the first being that
-//! we need a transform separate from the [`Transform`]. This is
-//! because we want to have 'heigh'. The higher an object is, the
-//! further along the y axis it goes. These kinds of transformations
-//! are possible in bevy, but not very easily, and would create problems
-//! concerning draw order. It also serves the purpose of smoothening the
-//! position difference on the client side, for when the tickrate of the
-//! server is lower than the frame rate of the client.
-
 use crate::networking::*;
 use bevy::prelude::*;
 
@@ -18,10 +9,11 @@ pub enum TransformEvent {
     SetTranslation(NetworkEntity, Vec2),
 }
 
+pub struct ZSort;
 pub struct Height(pub f32);
 
 pub fn transform_z_sort_system(
-    mut query: Query<&mut Transform, Changed<Transform>>,
+    mut query: Query<&mut Transform, (Changed<Transform>, With<ZSort>)>,
 ) {
     for mut transform in query.iter_mut() {
         transform.translation.z = transform.translation.y * -YZ_RATIO;
