@@ -8,10 +8,10 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.39"
-bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", features = ["serialize"] }
+bevy = { version = "0.5.0", features = ["serialize"] }
 bincode = "1.3.2"
 clap = "3.0.0-beta.2"
-geo = { version = "0.17.1", features = ["serde"] }
+bevy_rapier2d = { git = "https://github.com/dimforge/bevy_rapier" }
 itertools = "0.10.0"
 ron = "0.6.4"
 serde = { version = "1.0.125", features = ["derive"] }

@@ -1,5 +1,4 @@
 use crate::animation::*;
-use crate::collider::*;
 use crate::networking::*;
 use crate::player::*;
 use crate::transform::*;
@@ -120,11 +119,11 @@ pub fn attack_server_system(
 }
 
 pub fn attack_hit_server_system(
-    collision_resource: Res<CollisionResource>,
     query: Query<(Entity, &Damage)>,
     mut player_query: Query<(&NetworkEntity, &mut Player)>,
 ) {
     for (entity, damage) in query.iter() {
+        /*
         for entity in collision_resource.just_intersected(&entity) {
             if let Ok((network_entity, mut player)) = player_query.get_mut(entity) {
                 if *network_entity != damage.source {
@@ -132,6 +131,7 @@ pub fn attack_hit_server_system(
                 }
             }
         }
+        */
     }
 }
 
@@ -179,7 +179,7 @@ impl NetworkSpawnable for AttackHitSpawner {
                 .insert(animator)
                 .insert(transform)
                 .insert(GlobalTransform::default())
-                .insert(Collider::from(self.hitbox.clone()))
+                .insert(crate::helper::polygon_collider(self.hitbox.clone()))
                 .insert(Parent(parent))
                 .id()
         } else {

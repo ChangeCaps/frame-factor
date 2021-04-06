@@ -1,12 +1,12 @@
 use crate::animation::*;
 use crate::attack::*;
 use crate::camera::*;
-use crate::collider::*;
 use crate::frame::*;
 use crate::input::*;
 use crate::networking::*;
 use crate::progress_bar::*;
 use crate::transform::*;
+use bevy_rapier2d::rapier::dynamics::RigidBodyBuilder;
 use bevy::prelude::*;
 
 #[derive(Serialize, Deserialize, TypeUuid)]
@@ -341,7 +341,8 @@ impl NetworkSpawnable for PlayerSpawner {
         let mut animator = Animator::new();
         animator.play(frame.idle_animation.clone());
 
-        let collider = Collider::from(frame.collision_box.clone());
+        let collider = crate::helper::polygon_collider(frame.collision_box.clone());
+        let rigidbody = RigidBodyBuilder::new_kinematic();
 
         if world.get_resource::<NetworkSettings>().unwrap().is_server {
             world
@@ -350,6 +351,7 @@ impl NetworkSpawnable for PlayerSpawner {
                 .insert(GlobalTransform::identity())
                 .insert(player)
                 .insert(collider)
+                .insert(rigidbody)
                 .insert(animator)
                 .insert(AttackController::new())
                 .id()

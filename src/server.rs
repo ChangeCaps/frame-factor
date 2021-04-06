@@ -1,12 +1,12 @@
 use crate::animation::*;
 use crate::attack::*;
-use crate::collider::*;
 use crate::frame::*;
 use crate::game_state::*;
 use crate::networking::*;
 use crate::player::*;
 use crate::transform::*;
 use bevy::prelude::*;
+use bevy_rapier2d::physics::{EventQueue, RapierPhysicsPlugin};
 
 pub struct Players {
     pub players: Vec<ActorId>,
@@ -33,10 +33,10 @@ pub fn run(ip: String) {
         .add_plugin(bevy::transform::TransformPlugin)
         .add_plugin(bevy::asset::AssetPlugin)
         .add_plugin(bevy::log::LogPlugin)
+        .add_plugin(RapierPhysicsPlugin)
         .add_plugin(NetworkPlugin::server(ip))
         .add_plugin(PlayerPlugin)
         .add_plugin(FramePlugin)
-        .add_plugin(CollisionPlugin)
         .add_plugin(AnimationPlugin)
         .add_plugin(AttackPlugin)
         // network events
@@ -47,6 +47,7 @@ pub fn run(ip: String) {
         // systems
         .add_system(transform_server_system.system())
         .add_system(connection_system.system())
+        .add_system(print_events.system())
         // startup systems
         .add_startup_system(startup_system.system())
         // run
@@ -95,5 +96,15 @@ fn connection_system(
                 net.remove_connection(&id);
             }
         }
+    }
+}
+
+fn print_events(events: Res<EventQueue>) {
+    while let Ok(intersection_event) = events.intersection_events.pop() {
+        println!("Received intersection event: {:?}", intersection_event);
+    }
+
+    while let Ok(contact_event) = events.contact_events.pop() {
+        println!("Received contact event: {:?}", contact_event);
     }
 }

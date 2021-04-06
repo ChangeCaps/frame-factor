@@ -5,7 +5,6 @@ mod animation;
 mod attack;
 mod camera;
 mod client;
-mod collider;
 mod frame;
 mod game_settings;
 mod game_state;

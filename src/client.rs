@@ -1,7 +1,6 @@
 use crate::animation::*;
 use crate::attack::*;
 use crate::camera::*;
-use crate::collider::*;
 use crate::frame::*;
 use crate::input::*;
 use crate::networking::*;
@@ -31,7 +30,6 @@ pub fn run(ip: String) {
         .add_plugin(PlayerPlugin)
         .add_plugin(InputPlugin)
         .add_plugin(FramePlugin)
-        .add_plugin(CollisionPlugin)
         .add_plugin(ProgressBarPlugin)
         .add_plugin(AnimationPlugin)
         .add_plugin(AttackPlugin)
