@@ -82,7 +82,7 @@ pub fn player_server_system(
     )>,
 ) {
     // update players
-    for (network_entity, mut player, animator, _, mut transform, mut velocity) in query.iter_mut() {
+    for (network_entity, mut player, animator, _, _, mut velocity) in query.iter_mut() {
         // remove stun if duration is over
         if player.stun == Some(0) {
             player.stun = None;
@@ -109,15 +109,15 @@ pub fn player_server_system(
             event_sender.send(&event).unwrap();
         }
 
-        if player.stun.is_none() {
-            let frame = frames.get(&player.frame).unwrap();
+        let frame = frames.get(&player.frame).unwrap();
 
+        if player.stun.is_none() {
             let v = if player.movement_vector.length() == 0.0 {
                 Vec2::ZERO
             } else {
                 player.movement_vector.normalize() * frame.walking_speed
             };
-
+    
             velocity.linear = v.extend(0.0);
         }
     }
@@ -347,7 +347,9 @@ impl NetworkSpawnable for PlayerSpawner {
         let mut animator = Animator::new();
         animator.play(frame.idle_animation.clone());
 
-        let body = Body::Sphere { radius: frame.collider_radius };
+        let body = Body::Sphere {
+            radius: frame.collider_radius,
+        };
 
         let transform = Transform::from_translation(self.position.extend(0.0));
 

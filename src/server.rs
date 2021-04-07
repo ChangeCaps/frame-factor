@@ -48,6 +48,7 @@ pub fn run(ip: String) {
         // systems
         .add_system(transform_server_system.system())
         .add_system(connection_system.system())
+        .add_system(print_events.system())
         // startup systems
         .add_startup_system(startup_system.system())
         // run
@@ -102,3 +103,8 @@ fn connection_system(
     }
 }
 
+pub fn print_events(mut events: EventReader<CollisionEvent>) {
+    for event in events.iter() {
+        println!("{:?}", event);
+    }
+}

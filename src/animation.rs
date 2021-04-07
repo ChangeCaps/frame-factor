@@ -132,7 +132,6 @@ impl Animator {
 }
 
 pub fn animator_server_system(
-    time: Res<Time>,
     animations: Res<Assets<Animation>>,
     mut query: Query<&mut Animator>,
 ) {
@@ -143,7 +142,7 @@ pub fn animator_server_system(
         if let Some(animation) = animator.animation.clone() {
             let animation = animations.get(animation.as_str()).unwrap();
 
-            animator.advance(animation, time.delta_seconds());
+            animator.advance(animation, 1.0 / 48.0);
         }
     }
 }

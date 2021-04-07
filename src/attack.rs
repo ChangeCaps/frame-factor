@@ -4,6 +4,7 @@ use crate::player::*;
 use crate::transform::*;
 use bevy::prelude::*;
 use std::collections::HashMap;
+use heron::prelude::*;
 
 #[derive(Serialize, Deserialize)]
 pub enum AttackType {
@@ -16,6 +17,7 @@ pub enum AttackEvent {
     ActivateHitbox {
         stun: u32,
         damage: f32,
+        push_back: f32,
         animation: String,
         hitbox: Vec<Vec2>,
     },
@@ -35,6 +37,7 @@ pub struct Damage {
     pub source: NetworkEntity,
     pub stun: u32,
     pub damage: f32,
+    pub push_back: f32,
 }
 
 pub struct AttackController {
@@ -88,6 +91,7 @@ pub fn attack_server_system(
                             AttackEvent::ActivateHitbox {
                                 stun,
                                 damage,
+                                push_back,
                                 animation,
                                 hitbox,
                             } => {
@@ -98,6 +102,7 @@ pub fn attack_server_system(
                                         source: *network_entity,
                                         stun: *stun,
                                         damage: *damage,
+                                        push_back: *push_back,
                                     },
                                     direction: player.aim_direction,
                                     hitbox: hitbox.clone(),
@@ -119,19 +124,31 @@ pub fn attack_server_system(
 }
 
 pub fn attack_hit_server_system(
-    query: Query<(Entity, &Damage)>,
-    mut player_query: Query<(&NetworkEntity, &mut Player)>,
+    mut events: EventReader<CollisionEvent>,
+    query: Query<(&Damage, &GlobalTransform)>,
+    mut player_query: Query<(&NetworkEntity, &mut Player, &GlobalTransform, &mut Velocity)>,
 ) {
-    for (entity, damage) in query.iter() {
-        /*
-        for entity in collision_resource.just_intersected(&entity) {
-            if let Ok((network_entity, mut player)) = player_query.get_mut(entity) {
+    let mut handle = move |a, b| {
+        if let Ok((damage, damage_transform)) = query.get(a) {
+            if let Ok((network_entity, mut player, player_transform, mut velocity)) = player_query.get_mut(b) {
                 if *network_entity != damage.source {
                     player.hit(damage);
+
+                    let diff = player_transform.translation - damage_transform.translation;
+                    velocity.linear += diff.normalize() * damage.push_back;
                 }
             }
         }
-        */
+    };
+
+    for event in events.iter() {
+        match event {
+            CollisionEvent::Started(a, b) => {
+                handle(*a, *b);
+                handle(*b, *a);
+            }
+            _ => (),
+        }
     }
 }
 
@@ -167,6 +184,10 @@ impl NetworkSpawnable for AttackHitSpawner {
             .unwrap();
 
         let rotation = self.direction.y.atan2(self.direction.x) + std::f32::consts::PI / 2.0;
+        let transform = Transform::from_rotation(Quat::from_rotation_z(rotation));
+
+        let body = crate::helper::convex_hull(self.hitbox.clone());
+        let body_type = BodyType::Sensor;
 
         let mut animator = Animator::new();
         animator.play(self.animation.clone());
@@ -176,7 +197,9 @@ impl NetworkSpawnable for AttackHitSpawner {
                 .spawn()
                 .insert(self.damage.clone())
                 .insert(animator)
-                .insert(Transform::default())
+                .insert(body)
+                .insert(body_type)
+                .insert(transform)
                 .insert(GlobalTransform::default())
                 .insert(Parent(parent))
                 .id()
@@ -185,7 +208,7 @@ impl NetworkSpawnable for AttackHitSpawner {
                 .spawn()
                 .insert_bundle(AnimatorBundle {
                     animator,
-                    transform: Transform::from_rotation(Quat::from_rotation_z(rotation)),
+                    transform,
                     ..Default::default()
                 })
                 .insert(self.damage.clone())
