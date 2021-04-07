@@ -11,9 +11,9 @@ Attack (
                 animation: "frames/katana_one/slash_hit.anim",
                 hitbox: [
                     (0.0, 0.0),
-                    (-1.5, 2.5),
-                    (0.0, 2.675),
-                    (1.5, 2.5),
+                    (48, 80),
+                    (0.0, 85.6),
+                    (48, 80),
                 ],
             ),
         ],
