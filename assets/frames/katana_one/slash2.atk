@@ -2,18 +2,20 @@ Attack(
     animation: "frames/katana_one/slash.anim",
     events: {
         5: [
-            ActivateHitbox {
-                damage: 3.0,
+            ActivateHitbox(
+                hit: (
+                    stun: 8,
+                    damage: 3.0,
+                    frames: 5,
+                ),
+                animation: "frames/katana_one/slash_hit.anim",
                 hitbox: [
                     (0.0, 0.0),
                     (-1.5, 2.5),
                     (0.0, 2.675),
                     (1.5, 2.5),
                 ],
-            },
-        ],
-        10: [
-            DeactivateHitbox,
+            ),
         ],
     },
 )

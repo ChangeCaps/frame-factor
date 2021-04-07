@@ -1,9 +1,10 @@
 //! The Frame Factor code base.
 
+mod angle;
+mod animation;
 mod attack;
 mod camera;
 mod client;
-mod collider;
 mod frame;
 mod game_settings;
 mod game_state;
@@ -13,7 +14,7 @@ mod networking;
 mod player;
 mod progress_bar;
 mod server;
-mod world_transform;
+mod transform;
 
 use clap::Clap;
 

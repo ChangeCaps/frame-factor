@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// A payload sent through the network, supposed to be deserialized on arrival.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct NetworkPayload {
     pub uuid: Uuid,
     pub data: Vec<u8>,

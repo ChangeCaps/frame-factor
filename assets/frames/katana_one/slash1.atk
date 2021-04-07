@@ -1,19 +1,21 @@
-Attack(
+Attack (
     animation: "frames/katana_one/slash.anim",
     events: {
-        5: [
-            ActivateHitbox {
+        1: [
+            Stun(16),
+        ],
+        2: [
+            ActivateHitbox(
+                stun: 24,
                 damage: 3.0,
+                animation: "frames/katana_one/slash_hit.anim",
                 hitbox: [
                     (0.0, 0.0),
                     (-1.5, 2.5),
                     (0.0, 2.675),
                     (1.5, 2.5),
                 ],
-            },
-        ],
-        10: [
-            DeactivateHitbox,
+            ),
         ],
     },
 )

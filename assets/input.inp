@@ -3,4 +3,5 @@ InputSettings(
     down: Key(S),
     left: Key(A),
     right: Key(D),
+    light_attack: Mouse(Left),
 )

@@ -1,10 +1,12 @@
-use crate::collider::*;
+use crate::animation::*;
+use crate::attack::*;
 use crate::frame::*;
 use crate::game_state::*;
 use crate::networking::*;
 use crate::player::*;
-use crate::world_transform::*;
+use crate::transform::*;
 use bevy::prelude::*;
+use bevy_rapier2d::physics::{EventQueue, RapierPhysicsPlugin};
 
 pub struct Players {
     pub players: Vec<ActorId>,
@@ -21,26 +23,31 @@ impl Players {
 pub fn run(ip: String) {
     App::build()
         // resources
+        .insert_resource(bevy::ecs::schedule::ReportExecutionOrderAmbiguities)
         .insert_resource(bevy::app::ScheduleRunnerSettings::run_loop(
-            std::time::Duration::from_secs_f32(1.0 / 40.0),
+            std::time::Duration::from_secs_f32(1.0 / 48.0),
         ))
         .insert_resource(Players::new())
         // plugins
         .add_plugins(MinimalPlugins)
+        .add_plugin(bevy::transform::TransformPlugin)
         .add_plugin(bevy::asset::AssetPlugin)
         .add_plugin(bevy::log::LogPlugin)
+        .add_plugin(RapierPhysicsPlugin)
         .add_plugin(NetworkPlugin::server(ip))
         .add_plugin(PlayerPlugin)
         .add_plugin(FramePlugin)
-        .add_plugin(CollisionPlugin)
+        .add_plugin(AnimationPlugin)
+        .add_plugin(AttackPlugin)
         // network events
-        .register_network_event::<WorldTransformEvent>()
+        .register_network_event::<TransformEvent>()
         // network spawnables
         // state
         .add_state(GameState::Connection)
         // systems
-        .add_system(world_transform_system.system())
+        .add_system(transform_server_system.system())
         .add_system(connection_system.system())
+        .add_system(print_events.system())
         // startup systems
         .add_startup_system(startup_system.system())
         // run
@@ -89,5 +96,15 @@ fn connection_system(
                 net.remove_connection(&id);
             }
         }
+    }
+}
+
+fn print_events(events: Res<EventQueue>) {
+    while let Ok(intersection_event) = events.intersection_events.pop() {
+        println!("Received intersection event: {:?}", intersection_event);
+    }
+
+    while let Ok(contact_event) = events.contact_events.pop() {
+        println!("Received contact event: {:?}", contact_event);
     }
 }

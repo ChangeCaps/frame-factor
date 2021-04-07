@@ -64,7 +64,13 @@ pub trait NetworkSpawnable:
 }
 
 fn spawn<T: NetworkSpawnable>(world: &mut World, payload: &NetworkPayload) {
-    let event: NetworkSpawnEvent<T> = bincode::deserialize(&payload.data).unwrap();
+    let event: NetworkSpawnEvent<T> = match bincode::deserialize(&payload.data) {
+        Ok(v) => v,
+        Err(e) => {
+            error!("payload: {:?}, error: {}", payload, e);
+            return;
+        }
+    };
 
     let entity = event.spawnable.spawn(world);
 

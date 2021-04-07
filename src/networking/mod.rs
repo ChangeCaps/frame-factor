@@ -16,6 +16,11 @@ pub use serde::{Deserialize, Serialize};
 use bevy::prelude::*;
 use std::net::TcpStream;
 
+#[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
+pub enum NetworkStage {
+    Spawn,
+}
+
 pub struct NetworkSettings {
     pub is_server: bool,
 }
@@ -44,6 +49,11 @@ impl NetworkPlugin {
 impl Plugin for NetworkPlugin {
     fn build(&self, app_builder: &mut AppBuilder) {
         app_builder.add_event::<ConnectionEvent>();
+        app_builder.add_stage_before(
+            bevy::app::CoreStage::PostUpdate,
+            NetworkStage::Spawn,
+            SystemStage::parallel(),
+        );
 
         app_builder.insert_resource(NetworkMessages::new());
         app_builder.insert_resource(NetworkEventSender::new());
@@ -64,7 +74,7 @@ impl Plugin for NetworkPlugin {
         );
 
         app_builder.add_system_to_stage(
-            bevy::app::CoreStage::PostUpdate,
+            NetworkStage::Spawn,
             network_spawner_system.exclusive_system(),
         );
 

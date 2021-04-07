@@ -1,0 +1,8 @@
+Animation(
+    image: "frames/katana_one/slash.png",
+    columns: 1,
+    rows: 1,
+    length: 8,
+    fps: 24.0,
+    looping: false,
+)

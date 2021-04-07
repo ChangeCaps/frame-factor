@@ -8,6 +8,7 @@ pub struct InputSettings {
     pub down: ButtonInput,
     pub left: ButtonInput,
     pub right: ButtonInput,
+    pub light_attack: ButtonInput,
 }
 
 #[derive(Serialize, Deserialize)]

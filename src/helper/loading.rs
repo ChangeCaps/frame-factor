@@ -12,7 +12,12 @@ macro_rules! ron_loader {
                     match load_context.path().extension().unwrap().to_str().unwrap() {
                         $(
                             $extension => {
-                                let asset = ron::de::from_bytes::<$asset>(bytes)?;
+                                let asset = ron::de::from_bytes::<$asset>(bytes)
+                                    .map_err(|e| {
+                                        anyhow::Error::msg(
+                                            format!("'{}': {}", load_context.path().to_string_lossy(), e)
+                                        )
+                                    })?;
                                 load_context.set_default_asset(bevy::asset::LoadedAsset::new(asset));
                             },
                         )+

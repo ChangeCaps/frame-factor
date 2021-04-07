@@ -3,6 +3,6 @@ Animation(
     columns: 3,
     rows: 4,
     length: 12,
-    fps: 24.0,
-    looping: false,
+    fps: 4.0,
+    looping: true,
 )
