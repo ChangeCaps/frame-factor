@@ -1,5 +1,5 @@
-pub mod loading;
 pub mod collision;
+pub mod loading;
 
-pub use loading::*;
 pub use collision::*;
+pub use loading::*;

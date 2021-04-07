@@ -6,8 +6,12 @@ use crate::input::*;
 use crate::networking::*;
 use crate::progress_bar::*;
 use crate::transform::*;
-use bevy_rapier2d::rapier::dynamics::RigidBodyBuilder;
 use bevy::prelude::*;
+use bevy_rapier2d::physics::RigidBodyHandleComponent;
+use bevy_rapier2d::rapier::{
+    dynamics::{RigidBodyBuilder, RigidBodySet},
+    geometry::ColliderBuilder,
+};
 
 #[derive(Serialize, Deserialize, TypeUuid)]
 #[uuid = "1d042690-8b1a-45ec-94db-7fdccaab7090"]
@@ -71,6 +75,7 @@ pub fn player_server_system(
     attacks: Res<Assets<Attack>>,
     frames: Res<Assets<Frame>>,
     event_sender: Res<NetworkEventSender>,
+    mut rigidbody_set: ResMut<RigidBodySet>,
     mut events: ResMut<NetworkEvents<PlayerInputEvent>>,
     mut query: Query<(
         &NetworkEntity,
@@ -78,10 +83,11 @@ pub fn player_server_system(
         &mut Animator,
         &mut AttackController,
         &mut Transform,
+        &RigidBodyHandleComponent,
     )>,
 ) {
     // update players
-    for (network_entity, mut player, animator, _, mut world_transform) in query.iter_mut() {
+    for (network_entity, mut player, animator, _, mut transform, rb_handle) in query.iter_mut() {
         // remove stun if duration is over
         if player.stun == Some(0) {
             player.stun = None;
@@ -111,9 +117,11 @@ pub fn player_server_system(
         if player.movement_vector.length() > 0.0 && player.stun.is_none() {
             let frame = frames.get(&player.frame).unwrap();
 
-            world_transform.translation += player.movement_vector.extend(0.0).normalize()
-                * frame.walking_speed
-                * time.delta_seconds();
+            let rb = rigidbody_set.get_mut(rb_handle.handle()).unwrap();
+
+            let v = player.movement_vector.normalize() * frame.walking_speed;
+
+            rb.set_linvel(bevy_rapier2d::na::Vector2::new(v.x, v.y), true);
         }
     }
 
@@ -123,7 +131,7 @@ pub fn player_server_system(
             PlayerInputEvent::SetMovement(network_entity, movement_vector) => {
                 let entity = network_entity_registry.get(&network_entity).unwrap();
 
-                let (_, mut player, _, _, _) = query.get_mut(entity).unwrap();
+                let (_, mut player, _, _, _, _) = query.get_mut(entity).unwrap();
 
                 if player.actor_id == sender {
                     player.movement_vector = movement_vector;
@@ -144,7 +152,7 @@ pub fn player_server_system(
 
             PlayerInputEvent::Attack(network_entity, attack_type) => {
                 let entity = network_entity_registry.get(&network_entity).unwrap();
-                let (network_entity, mut player, mut animator, mut attack_controller, _) =
+                let (network_entity, mut player, mut animator, mut attack_controller, _, _) =
                     query.get_mut(entity).unwrap();
 
                 if player.attacking || player.actor_id != sender {
@@ -173,7 +181,7 @@ pub fn player_server_system(
 
             PlayerInputEvent::SetAimDirection(network_entity, aim_direction) => {
                 let entity = network_entity_registry.get(&network_entity).unwrap();
-                let (_, mut player, _, _, mut world_transform) = query.get_mut(entity).unwrap();
+                let (_, mut player, _, _, _, _) = query.get_mut(entity).unwrap();
 
                 if player.actor_id != sender {
                     continue;
@@ -301,7 +309,7 @@ pub fn player_client_system(
         }
     }
 
-    for (mut player, _, mut animator) in player_query.iter_mut() {
+    for (player, _, mut animator) in player_query.iter_mut() {
         let frame = frames.get(&player.frame).unwrap();
 
         if !player.attacking && player.movement_vector.length() == 0.0 {
@@ -315,6 +323,7 @@ pub fn player_client_system(
 pub struct PlayerSpawner {
     pub frame: String,
     pub player_id: ActorId,
+    pub position: Vec2,
 }
 
 impl NetworkSpawnable for PlayerSpawner {
@@ -341,14 +350,19 @@ impl NetworkSpawnable for PlayerSpawner {
         let mut animator = Animator::new();
         animator.play(frame.idle_animation.clone());
 
-        let collider = crate::helper::polygon_collider(frame.collision_box.clone());
-        let rigidbody = RigidBodyBuilder::new_kinematic();
+        let collider = ColliderBuilder::ball(frame.collider_radius);
+        let rigidbody = RigidBodyBuilder::new_dynamic()
+            .translation(self.position.x, self.position.y)
+            .gravity_scale(0.0)
+            .linear_damping(60.0);
+
+        let transform = Transform::from_translation(self.position.extend(0.0));
 
         if world.get_resource::<NetworkSettings>().unwrap().is_server {
             world
                 .spawn()
-                .insert(Transform::identity())
-                .insert(GlobalTransform::identity())
+                .insert(transform)
+                .insert(GlobalTransform::default())
                 .insert(player)
                 .insert(collider)
                 .insert(rigidbody)
@@ -365,6 +379,7 @@ impl NetworkSpawnable for PlayerSpawner {
                 .spawn()
                 .insert_bundle(AnimatorBundle {
                     animator,
+                    transform,
                     ..Default::default()
                 })
                 .insert(player)

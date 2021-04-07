@@ -1,17 +1,8 @@
 Frame(
     name: "Katana One",
     max_health: 100.0,
-    walking_speed: 48.0,
-    collision_box: [
-        (-0.208, 0.5),
-        (0.208, 0.5),
-        (0.5, 0.208),
-        (0.5, -0.208),
-        (0.208, -0.5),
-        (-0.208, -0.5),
-        (-0.5, -0.208),
-        (-0.5, 0.208),
-    ],
+    walking_speed: 256.0,
+    collider_radius: 32.0,
     idle_animation: "frames/katana_one/idle.anim",
     light_attack: "frames/katana_one/slash1.atk",
 )

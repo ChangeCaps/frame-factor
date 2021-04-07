@@ -82,10 +82,13 @@ fn connection_system(
                 if players.players.len() == 2 {
                     info!("All players connected, starting game");
 
+                    let mut positions = vec![Vec2::new(100.0, 0.0), Vec2::new(-100.0, 0.0)];
+
                     for id in &players.players {
                         network_spawner.spawn(PlayerSpawner {
                             frame: String::from("frames/katana_one/frame.fme"),
                             player_id: *id,
+                            position: positions.pop().unwrap(),
                         });
                     }
                 }

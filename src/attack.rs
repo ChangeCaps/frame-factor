@@ -4,6 +4,7 @@ use crate::player::*;
 use crate::transform::*;
 use bevy::prelude::*;
 use std::collections::HashMap;
+use bevy_rapier2d::rapier::dynamics::RigidBodyBuilder;
 
 #[derive(Serialize, Deserialize)]
 pub enum AttackType {
@@ -166,8 +167,10 @@ impl NetworkSpawnable for AttackHitSpawner {
             .get(&self.parent)
             .unwrap();
 
-        let rotation = self.direction.y.atan2(self.direction.x);
-        let transform = Transform::from_rotation(Quat::from_rotation_z(rotation));
+        let rotation = self.direction.y.atan2(self.direction.x) + std::f32::consts::PI / 2.0;
+
+        let collider = crate::helper::collision::polygon_collider(self.hitbox.clone()).sensor(true);
+        let rigidbody = RigidBodyBuilder::new_kinematic().rotation(rotation);
 
         let mut animator = Animator::new();
         animator.play(self.animation.clone());
@@ -177,7 +180,9 @@ impl NetworkSpawnable for AttackHitSpawner {
                 .spawn()
                 .insert(self.damage.clone())
                 .insert(animator)
-                .insert(transform)
+                .insert(collider)
+                .insert(rigidbody)
+                .insert(Transform::default())
                 .insert(GlobalTransform::default())
                 .insert(crate::helper::polygon_collider(self.hitbox.clone()))
                 .insert(Parent(parent))
@@ -187,7 +192,7 @@ impl NetworkSpawnable for AttackHitSpawner {
                 .spawn()
                 .insert_bundle(AnimatorBundle {
                     animator,
-                    transform,
+                    transform: Transform::from_rotation(Quat::from_rotation_z(rotation)),
                     ..Default::default()
                 })
                 .insert(self.damage.clone())

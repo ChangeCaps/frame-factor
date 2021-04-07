@@ -8,7 +8,7 @@ pub struct Frame {
     pub name: String,
     pub max_health: f32,
     pub walking_speed: f32,
-    pub collision_box: Vec<Vec2>,
+    pub collider_radius: f32,
     pub idle_animation: String,
     pub light_attack: String,
 }
