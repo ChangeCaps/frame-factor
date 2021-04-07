@@ -498,18 +498,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_rapier2d"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1756fa9b9e5bd29b625ce35aac11245be7725e1bb15d083e4fd7bf90542e9a01"
-dependencies = [
- "bevy",
- "concurrent-queue",
- "nalgebra",
- "rapier2d",
-]
-
-[[package]]
 name = "bevy_reflect"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1023,6 +1011,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "076a6803b0dacd6a88cfe64deba628b01533ff5ef265687e6938280c1afd0a28"
 
 [[package]]
+name = "convert_case"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
+
+[[package]]
 name = "copyless"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1334,6 +1328,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
+name = "duplicate"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75765becfb833f14b7daaa41bda609b06cf92429eb1de944205757c9a0aea9f5"
+dependencies = [
+ "convert_case",
+ "proc-macro-error",
+]
+
+[[package]]
 name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1442,9 +1446,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bevy",
- "bevy_rapier2d",
  "bincode",
  "clap",
+ "heron",
  "itertools",
  "ron",
  "serde",
@@ -1872,6 +1876,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "322f4de77956e22ed0e5032c359a0f1273f1f7f0d79bfa3b8ffbc730d7fbcc5c"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "heron"
+version = "0.4.0"
+source = "git+https://github.com/ChangeCaps/heron?branch=main#b7f8130ca30819694a02937414890a44da0a60c2"
+dependencies = [
+ "bevy",
+ "heron_core",
+ "heron_rapier",
+]
+
+[[package]]
+name = "heron_core"
+version = "0.4.0"
+source = "git+https://github.com/ChangeCaps/heron?branch=main#b7f8130ca30819694a02937414890a44da0a60c2"
+dependencies = [
+ "bevy",
+ "duplicate",
+]
+
+[[package]]
+name = "heron_rapier"
+version = "0.4.0"
+source = "git+https://github.com/ChangeCaps/heron?branch=main#b7f8130ca30819694a02937414890a44da0a60c2"
+dependencies = [
+ "bevy",
+ "crossbeam",
+ "fnv",
+ "heron_core",
+ "rapier2d",
 ]
 
 [[package]]
@@ -2887,6 +2922,7 @@ dependencies = [
  "parry2d",
  "rustc-hash",
  "simba",
+ "vec_map",
 ]
 
 [[package]]
@@ -2998,6 +3034,15 @@ name = "ryu"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
+
+[[package]]
+name = "safe_arch"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1ff3d6d9696af502cc3110dacce942840fb06ff4514cad92236ecc455f2ce05"
+dependencies = [
+ "bytemuck",
+]
 
 [[package]]
 name = "same-file"
@@ -3117,6 +3162,7 @@ dependencies = [
  "num-complex",
  "num-traits",
  "paste",
+ "wide",
 ]
 
 [[package]]
@@ -3721,6 +3767,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72fa9ba80626278fd87351555c363378d08122d7601e58319be3d6fa85a87747"
 dependencies = [
  "bitflags",
+]
+
+[[package]]
+name = "wide"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c51f160ef6333906fad7d31a2010d449148dd1a26bc377e0a1ace2cc9e1e1ee"
+dependencies = [
+ "bytemuck",
+ "safe_arch",
 ]
 
 [[package]]

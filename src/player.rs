@@ -7,11 +7,7 @@ use crate::networking::*;
 use crate::progress_bar::*;
 use crate::transform::*;
 use bevy::prelude::*;
-use bevy_rapier2d::physics::RigidBodyHandleComponent;
-use bevy_rapier2d::rapier::{
-    dynamics::{RigidBodyBuilder, RigidBodySet},
-    geometry::ColliderBuilder,
-};
+use heron::prelude::*;
 
 #[derive(Serialize, Deserialize, TypeUuid)]
 #[uuid = "1d042690-8b1a-45ec-94db-7fdccaab7090"]
@@ -75,7 +71,6 @@ pub fn player_server_system(
     attacks: Res<Assets<Attack>>,
     frames: Res<Assets<Frame>>,
     event_sender: Res<NetworkEventSender>,
-    mut rigidbody_set: ResMut<RigidBodySet>,
     mut events: ResMut<NetworkEvents<PlayerInputEvent>>,
     mut query: Query<(
         &NetworkEntity,
@@ -83,11 +78,11 @@ pub fn player_server_system(
         &mut Animator,
         &mut AttackController,
         &mut Transform,
-        &RigidBodyHandleComponent,
+        &mut Velocity,
     )>,
 ) {
     // update players
-    for (network_entity, mut player, animator, _, mut transform, rb_handle) in query.iter_mut() {
+    for (network_entity, mut player, animator, _, mut transform, mut velocity) in query.iter_mut() {
         // remove stun if duration is over
         if player.stun == Some(0) {
             player.stun = None;
@@ -114,14 +109,16 @@ pub fn player_server_system(
             event_sender.send(&event).unwrap();
         }
 
-        if player.movement_vector.length() > 0.0 && player.stun.is_none() {
+        if player.stun.is_none() {
             let frame = frames.get(&player.frame).unwrap();
 
-            let rb = rigidbody_set.get_mut(rb_handle.handle()).unwrap();
+            let v = if player.movement_vector.length() == 0.0 {
+                Vec2::ZERO
+            } else {
+                player.movement_vector.normalize() * frame.walking_speed
+            };
 
-            let v = player.movement_vector.normalize() * frame.walking_speed;
-
-            rb.set_linvel(bevy_rapier2d::na::Vector2::new(v.x, v.y), true);
+            velocity.linear = v.extend(0.0);
         }
     }
 
@@ -350,11 +347,7 @@ impl NetworkSpawnable for PlayerSpawner {
         let mut animator = Animator::new();
         animator.play(frame.idle_animation.clone());
 
-        let collider = ColliderBuilder::ball(frame.collider_radius);
-        let rigidbody = RigidBodyBuilder::new_dynamic()
-            .translation(self.position.x, self.position.y)
-            .gravity_scale(0.0)
-            .linear_damping(60.0);
+        let body = Body::Sphere { radius: frame.collider_radius };
 
         let transform = Transform::from_translation(self.position.extend(0.0));
 
@@ -364,8 +357,8 @@ impl NetworkSpawnable for PlayerSpawner {
                 .insert(transform)
                 .insert(GlobalTransform::default())
                 .insert(player)
-                .insert(collider)
-                .insert(rigidbody)
+                .insert(body)
+                .insert(Velocity::from_linear(Vec3::ZERO))
                 .insert(animator)
                 .insert(AttackController::new())
                 .id()

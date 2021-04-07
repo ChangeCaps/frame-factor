@@ -6,7 +6,7 @@ use crate::networking::*;
 use crate::player::*;
 use crate::transform::*;
 use bevy::prelude::*;
-use bevy_rapier2d::physics::{EventQueue, RapierPhysicsPlugin};
+use heron::prelude::*;
 
 pub struct Players {
     pub players: Vec<ActorId>,
@@ -28,13 +28,14 @@ pub fn run(ip: String) {
             std::time::Duration::from_secs_f32(1.0 / 48.0),
         ))
         .insert_resource(Players::new())
+        .insert_resource(Gravity::from(Vec3::ZERO))
         // plugins
         .add_plugins(MinimalPlugins)
         .add_plugin(bevy::transform::TransformPlugin)
         .add_plugin(bevy::asset::AssetPlugin)
         .add_plugin(bevy::log::LogPlugin)
-        .add_plugin(RapierPhysicsPlugin)
         .add_plugin(NetworkPlugin::server(ip))
+        .add_plugin(PhysicsPlugin::default())
         .add_plugin(PlayerPlugin)
         .add_plugin(FramePlugin)
         .add_plugin(AnimationPlugin)
@@ -47,7 +48,6 @@ pub fn run(ip: String) {
         // systems
         .add_system(transform_server_system.system())
         .add_system(connection_system.system())
-        .add_system(print_events.system())
         // startup systems
         .add_startup_system(startup_system.system())
         // run
@@ -102,12 +102,3 @@ fn connection_system(
     }
 }
 
-fn print_events(events: Res<EventQueue>) {
-    while let Ok(intersection_event) = events.intersection_events.pop() {
-        println!("Received intersection event: {:?}", intersection_event);
-    }
-
-    while let Ok(contact_event) = events.contact_events.pop() {
-        println!("Received contact event: {:?}", contact_event);
-    }
-}
