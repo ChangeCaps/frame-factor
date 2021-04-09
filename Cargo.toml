@@ -16,7 +16,7 @@ ron = "0.6.4"
 serde = { version = "1.0.125", features = ["derive"] }
 
 [dependencies.heron]
-git = "https://github.com/jcornaz/heron"
-branch = "dependabot/cargo/bevy-tw-0.5.0"
+git = "https://github.com/ChangeCaps/heron.git"
+branch = "main"
 features = ["2d"]
 default_features = false

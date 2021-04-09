@@ -363,6 +363,7 @@ impl NetworkSpawnable for PlayerSpawner {
                 .insert(Velocity::from_linear(Vec3::ZERO))
                 .insert(animator)
                 .insert(AttackController::new())
+                .insert(RotationConstraints::lock())
                 .id()
         } else {
             let progress_bar_material = world
